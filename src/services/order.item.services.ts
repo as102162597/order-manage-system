@@ -17,7 +17,10 @@ export class OrderItemService {
     }
 
     async findByShipmentId(id: number): Promise<OrderItem[]> {
-        return await this.orderItemRepository.find({ where: { shipment: { id } } }) || [];
+        return await this.orderItemRepository.find({
+            where: { shipment: { id } },
+            order: { id: 'ASC' }
+        }) || [];
     }
 
     async update(

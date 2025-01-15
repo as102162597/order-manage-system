@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from "@nestjs/common";
 import { OrderDto } from "src/dtos/order.dto";
 import { OrderCoordinator } from "src/coordinators/order.coordinator";
 
@@ -20,12 +20,16 @@ export class OrderController {
     }
 
     @Get('count/deleted')
-    async findDeletedPageCount(@Query('size', ParseIntPipe) size: number = 1): Promise<number> {
+    async findDeletedPageCount(
+        @Query('size', new DefaultValuePipe(1), ParseIntPipe) size: number
+    ): Promise<number> {
         return this.orderCoordinator.findPageCount(size, true);
     }
 
     @Get('count')
-    async findPageCount(@Query('size', ParseIntPipe) size: number = 1): Promise<number> {
+    async findPageCount(
+        @Query('size', new DefaultValuePipe(1), ParseIntPipe) size: number
+    ): Promise<number> {
         return this.orderCoordinator.findPageCount(size);
     }
 

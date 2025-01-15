@@ -22,7 +22,7 @@ export class OrderService {
     async findOne(object: Partial<Order>): Promise<Order> {
         const order = await this.orderRepository.findOne({ where: object });
         if (!order) {
-            this.reject(`${Order.name} not found`);
+            this.reject(`${Order.name} not found`, HttpStatus.NOT_FOUND);
         }
         return order;
     }
@@ -31,7 +31,7 @@ export class OrderService {
         try {
             return await this.findOne({ id, deleted });
         } catch (e) {
-            this.reject(`${Order.name} with id '${id}' not found`);
+            this.reject(`${Order.name} with id '${id}' not found`, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -43,7 +43,10 @@ export class OrderService {
         try {
             return await this.findOne({ salesChannel, code, deleted });
         } catch (e) {
-            this.reject(`${Order.name} with salesChannel '${salesChannel}' and code '${code}' not found`);
+            this.reject(
+                `${Order.name} with salesChannel '${salesChannel}' and code '${code}' not found`,
+                HttpStatus.NOT_FOUND
+            );
         }
     }
 

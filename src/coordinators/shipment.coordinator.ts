@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { QueryRunner } from "typeorm";
+import { DataSource, QueryRunner } from "typeorm";
 import { Order } from "src/entities/order.entity";
 import { Shipment } from "src/entities/shipment.entity";
 import { ShipmentDto } from "src/dtos/shipment.dto";
@@ -17,8 +17,19 @@ export class ShipmentCoordinator {
 
     constructor(
         private readonly shipmentService: ShipmentService,
-        private readonly orderItemCoordinator: OrderItemCoordinator
+        private readonly orderItemCoordinator: OrderItemCoordinator,
+        private readonly dataSource: DataSource
     ) {}
+
+    async create(
+        orderId: number,
+        shipmentDto: ShipmentDto
+    ): Promise<void> {
+        this.objectChecker.argvExist({ orderId });
+        this.checkCreateShipmentInputRecursively(shipmentDto);
+        const shipmentDao = this.getDao(shipmentDto);
+        await this.createWithTransaction(orderId, shipmentDao);
+    }
 
     async createShipments(
         queryRunner: QueryRunner,
@@ -32,12 +43,62 @@ export class ShipmentCoordinator {
         }
     }
 
+    async findOneById(id: number): Promise<ShipmentDto> {
+        this.objectChecker.argvExist({ id });
+        const shipmentDao = await this.shipmentService.findOneById(id);
+        const shipmentDto = this.getDto(shipmentDao);
+        shipmentDto.orderItems = await this.orderItemCoordinator.findByShipmentId(id);
+        shipmentDto.orderId = shipmentDao.orderId;
+        return shipmentDto;
+    }
+
+    async findOneByCode(code: string): Promise<ShipmentDto> {
+        this.objectChecker.argvExist({ code });
+        const shipmentDao = await this.shipmentService.findOneByCode(code);
+        const shipmentDto = this.getDto(shipmentDao);
+        shipmentDto.orderItems = await this.orderItemCoordinator.findByShipmentId(shipmentDao.id);
+        shipmentDto.orderId = shipmentDao.orderId;
+        return shipmentDto;
+    }
+
     async findByOrderId(id: number): Promise<ShipmentDto[]> {
         this.objectChecker.argvExist({ id });
         const shipmentDaos = await this.shipmentService.findByOrderId(id);
         const shipmentDtos = this.getDtos(shipmentDaos);
         await this.fillOrderItemsInDtos(shipmentDtos);
         return shipmentDtos;
+    }
+
+    async findBySizeAndPage(size: number, page: number, deleted = false): Promise<ShipmentDto[]> {
+        this.objectChecker.argvExist({ size, page });
+        const shipmentDaos = await this.shipmentService.findBySizeAndPage(size, page, deleted);
+        const shipmentDtos = this.getDtos(shipmentDaos);
+        await this.fillOrderItemsInDtos(shipmentDtos);
+        return shipmentDtos;
+    }
+
+    async findPageCount(size: number, deleted = false): Promise<number> {
+        const count = await this.shipmentService.findCount(deleted);
+        return Math.floor(count / size) + Number(!!(count % size));
+    }
+
+    async update(shipmentDto: Partial<ShipmentDto>): Promise<void> {
+        const original = await this.findOneById(shipmentDto.id);
+        this.checkUpdateInputRecursively(shipmentDto, original);
+        await this.updateWithTransaction(shipmentDto);
+    }
+
+    async restoreOneById(id: number): Promise<void> {
+        await this.shipmentService.restore(id);
+    }
+
+    async deleteOneById(id: number): Promise<void> {
+        await this.shipmentService.softDelete(id);
+    }
+
+    async removeOneById(id: number): Promise<void> {
+        await this.shipmentService.removable(id);
+        await this.removeOneByIdWithTransaction(id);
     }
 
     async updateShipments(
@@ -93,6 +154,25 @@ export class ShipmentCoordinator {
         return shipmentDtos;
     }
 
+    private async createWithTransaction(
+        orderId: number,
+        shipment: Shipment
+    ): Promise<void> {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.startTransaction();
+        try {
+            const order = new Order();
+            order.id = orderId;
+            await this.createShipmentRecursively(queryRunner, order, shipment);
+            await queryRunner.commitTransaction();
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw e;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
     private async createShipmentRecursively(
         queryRunner: QueryRunner,
         order: Order,
@@ -113,6 +193,20 @@ export class ShipmentCoordinator {
         }
     }
 
+    private async updateWithTransaction(shipmentDto: Partial<ShipmentDto>): Promise<void> {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.startTransaction();
+        try {
+            await this.updateShipmentRecursively(queryRunner, shipmentDto);
+            await queryRunner.commitTransaction();
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw e;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
     private async updateShipmentRecursively(
         queryRunner: QueryRunner,
         shipmentDto: Partial<ShipmentDto>
@@ -120,6 +214,20 @@ export class ShipmentCoordinator {
         const shipmentDao = this.getDao(shipmentDto);
         await this.shipmentService.update(queryRunner, shipmentDto.id, shipmentDao);
         await this.orderItemCoordinator.updateOrderItems(queryRunner, shipmentDto.orderItems);
+    }
+
+    private async removeOneByIdWithTransaction(id: number): Promise<void> {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.startTransaction();
+        try {
+            await this.removeRecursively(queryRunner, id);
+            await queryRunner.commitTransaction();
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw e;
+        } finally {
+            await queryRunner.release();
+        }
     }
 
     private async removeRecursively(queryRunner: QueryRunner, id: number): Promise<void> {
@@ -135,7 +243,7 @@ export class ShipmentCoordinator {
     }
 
     private checkUpdateInputRecursively(
-        shipmentDto: ShipmentDto | Partial<ShipmentDto>,
+        shipmentDto: Partial<ShipmentDto>,
         original: ShipmentDto
     ): void {
         this.orderItemCoordinator.checkUpdateInputs(

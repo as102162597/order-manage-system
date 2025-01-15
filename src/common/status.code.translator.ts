@@ -68,4 +68,4 @@ export class StatusCodeTranslator {
         510: 'Not Extended',
         511: 'Network Authentication Required'
     };
-}
+};

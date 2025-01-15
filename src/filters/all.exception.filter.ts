@@ -1,9 +1,10 @@
-import { Catch, ExceptionFilter, ArgumentsHost, HttpException, HttpStatus } from "@nestjs/common";
+import { Catch, ExceptionFilter, ArgumentsHost, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { StatusCodeTranslator } from "src/common/status.code.translator";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
     private readonly translator = new StatusCodeTranslator();
+    private readonly logger = new Logger();
 
     catch(exception: any, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
@@ -24,7 +25,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
             responseTime: new Date()
         };
 
-        console.log(exception);
+        // console.log(exception);
+        this.logger.debug(exception.stack);
 
         response.status(status).json(errorResponse);
     }
