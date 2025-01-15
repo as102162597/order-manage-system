@@ -154,3 +154,6 @@ dist
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Customer
+develop_start.sh
