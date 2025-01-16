@@ -49,6 +49,10 @@ export class OrderItemCoordinator {
         await this.orderItemService.removeByShipmentId(queryRunner, id);
     }
 
+    async areaAnalyze(location = '', orderBy = 'price'): Promise<any> {
+        return await this.orderItemService.areaAnalyze(location, orderBy);
+    }
+
     checkCreateOrderItemsInput(orderItemDtos: OrderItemDto[]): void {
         if (Array.isArray(orderItemDtos)) {
             for (const orderItemDto of orderItemDtos) {

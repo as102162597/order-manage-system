@@ -6,7 +6,8 @@ export class OrderItemMapperConfig implements MapperConfig {
             'id',
             'productName',
             'quantity',
-            'price'
+            'price',
+            'tag'
         ];
     }
 };

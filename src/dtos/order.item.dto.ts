@@ -18,6 +18,10 @@ export class OrderItemDto implements Countable {
     @IsNumber()
     price: number;
 
+    @IsNotEmpty()
+    @IsString()
+    tag: string
+
     @IsString()
     shipmentId: number;
 
