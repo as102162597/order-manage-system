@@ -66,7 +66,7 @@ export class OrderDto implements Iterable, Countable {
             return this.index < this.shipments.length;
         }
 
-        next() {
+        next(): any {
             return this.hasNext() ? this.shipments[this.index++] : null;
         }
     };
