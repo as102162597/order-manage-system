@@ -53,7 +53,7 @@ export class ShipmentDto implements Iterable, Countable {
         }
 
         next() {
-            return this.orderItems[this.index++];
+            return this.hasNext() ? this.orderItems[this.index++] : null;
         }
     };
 };
