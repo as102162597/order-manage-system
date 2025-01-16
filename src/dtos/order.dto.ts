@@ -39,11 +39,11 @@ export class OrderDto implements Iterable, Countable {
     @IsArray()
     shipments: ShipmentDto[];
 
-    getPrice(): number {
+    calculateTotalPrice(): number {
         let price = 0;
         const iterator = this.getIterator();
         while (iterator.hasNext()) {
-            price += iterator.next().getPrice();
+            price += iterator.next().calculateTotalPrice();
         }
         return price;
     }

@@ -57,7 +57,7 @@ export class OrderCoordinator {
 
     async findPriceById(id: number): Promise<number> {
         const orderDto = await this.findOneById(id);
-        return orderDto.getPrice();
+        return orderDto.calculateTotalPrice();
     }
 
     async update(orderDto: Partial<OrderDto>): Promise<void> {

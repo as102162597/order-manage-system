@@ -1,3 +1,3 @@
 export interface Countable {
-    getPrice(): number;
+    calculateTotalPrice(): number;
 };

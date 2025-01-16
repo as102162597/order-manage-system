@@ -25,7 +25,15 @@ export class OrderItemDto implements Countable {
     @IsString()
     shipmentId: number;
 
+    getQuantity(): number {
+        return Number(this.quantity) || 0;
+    }
+
     getPrice(): number {
         return Number(this.price) || 0;
+    }
+
+    calculateTotalPrice(): number {
+        return this.getPrice() * this.getQuantity();
     }
 };
