@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { OrderItemCoordinator } from "src/coordinators/order.item.coordinator";
 
-@Controller('orderitem')
+@Controller('order-item')
 export class OrderItemController {
     constructor(private readonly orderItemCoordinator: OrderItemCoordinator) {}
 

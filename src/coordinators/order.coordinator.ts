@@ -1,5 +1,5 @@
 import { DataSource, QueryRunner } from "typeorm";
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Order } from "src/entities/order.entity";
 import { OrderDto } from "src/dtos/order.dto";
 import { OrderService } from "src/services/order.service";
@@ -7,6 +7,9 @@ import { ShipmentCoordinator } from "./shipment.coordinator";
 import { Mapper } from "src/mappers/mapper";
 import { OrderMapperConfig } from "src/mappers/order.mapper.config";
 import { ObjectChecker } from "src/common/object.checker";
+import { getPaymentStatus } from "src/data/payment.status.data";
+import { StatusFactory } from "src/common/payment.statuses/status.factory";
+import { StatusHandler } from "src/common/payment.statuses/status.handler";
 
 @Injectable()
 export class OrderCoordinator {
@@ -77,6 +80,16 @@ export class OrderCoordinator {
     async removeOneById(id: number): Promise<void> {
         await this.orderService.removable(id);
         await this.removeOneByIdWithTransaction(id);
+    }
+
+    async updatePaymentStatus(operator: string, id: number) {
+        this.objectChecker.argvExist({ operator, id });
+        const orderDao = await this.orderService.findOneById(id);
+        const orderDto = this.getDto(orderDao);
+        const handler = StatusFactory.createHandler(orderDao.paymentStatusId);
+        console.log(this.operatePayment(handler, operator));
+        orderDto.paymentStatus = getPaymentStatus('id', handler.getId())?.name;
+        await this.updateWithTransaction(orderDto);
     }
 
     private async createWithTransaction(order: Order): Promise<void> {
@@ -166,6 +179,19 @@ export class OrderCoordinator {
         this.shipmentCoordinator.checkUpdateInputs(orderDto.shipments, original.shipments);
     }
 
+    private operatePayment(handler: StatusHandler, operator: string): number {
+        switch (operator) {
+            case 'success':     handler.paymentSucceeded(); return 1;
+            case 'failed':      handler.paymentFailed();    return 2;
+            case 'overdue':     handler.overdue();          return 3;
+            case 'refund':      handler.requestRefund();    return 4;
+            case 'refunded':    handler.completeRefund();   return 5;
+            default:
+                throw new HttpException(
+                    `Cannot PATCH /order/payment/${operator}`, HttpStatus.NOT_FOUND);
+        }
+    }
+
     private getDaos(orderDtos: Partial<OrderDto>[]): Order[] {
         let orderDaos: Order[] = [];
         if (Array.isArray(orderDtos)) {
@@ -185,6 +211,8 @@ export class OrderCoordinator {
     private getDao(orderDto: Partial<OrderDto>): Order {
         if (orderDto) {
             const orderDao = this.orderMapper.getDao(orderDto);
+            orderDao.paymentStatus = getPaymentStatus('name', orderDto.paymentStatus) || undefined;
+            orderDao.paymentStatusId = orderDao.paymentStatus?.id;
             orderDao.shipments = this.shipmentCoordinator.getDaos(orderDto.shipments);
             return orderDao;
         } else {
@@ -195,6 +223,8 @@ export class OrderCoordinator {
     private getDto(orderDao: Order): OrderDto {
         if (orderDao) {
             const orderDto = this.orderMapper.getDto(orderDao);
+            orderDto.paymentStatus = orderDao.paymentStatus?.name
+                || getPaymentStatus('id', orderDao.paymentStatusId)?.name;
             orderDto.shipments = this.shipmentCoordinator.getDtos(orderDao.shipments);
             return orderDto;
         } else {

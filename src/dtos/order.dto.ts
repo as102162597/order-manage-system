@@ -27,6 +27,9 @@ export class OrderDto implements Iterable, Countable {
     @IsString()
     paymentMethod: string;
 
+    @IsNumber()
+    paymentStatus: string;
+
     @IsString()
     status: string;
 

@@ -3,7 +3,7 @@ import { QueryRunner } from "typeorm";
 import { Shipment } from "src/entities/shipment.entity";
 import { OrderItem } from "src/entities/order.items.entity";
 import { OrderItemDto } from "src/dtos/order.item.dto";
-import { OrderItemService } from "src/services/order.item.services";
+import { OrderItemService } from "src/services/order.item.service";
 import { Mapper } from "src/mappers/mapper";
 import { OrderItemMapperConfig } from "src/mappers/order.item.mapper.config";
 import { ObjectChecker } from "src/common/object.checker";

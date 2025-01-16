@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, ManyToOne, JoinColumn } from 'typeorm';
+import { PaymentStatus } from './payment.status.entity';
 import { Shipment } from './shipment.entity';
 
 @Entity('orders')
@@ -24,6 +25,13 @@ export class Order {
 
     @Column({ type: 'varchar', length: 50, nullable: true, default: null })
     paymentMethod: string;
+
+    @ManyToOne(() => PaymentStatus, (paymentStatus) => paymentStatus.id, { nullable: false })
+    @JoinColumn({ name: 'payment_status' })
+    paymentStatus: PaymentStatus;
+
+    @Column({ name: 'payment_status', type: 'int', nullable: false, default: 1 })
+    paymentStatusId: number;
 
     @Column({ type: 'varchar', length: 50, nullable: true, default: null })
     status: string;

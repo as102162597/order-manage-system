@@ -50,18 +50,26 @@ export class OrderController {
     }
 
     @Get('price/:id')
-    async findPriceById(@Param('id') id: number): Promise<number> {
+    async findPriceById(@Param('id', ParseIntPipe) id: number): Promise<number> {
         return this.orderCoordinator.findPriceById(id);
     }
 
     @Get(':id')
-    async findOneById(@Param('id') id: number): Promise<OrderDto> {
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<OrderDto> {
         return this.orderCoordinator.findOneById(id);
     }
 
     @Put()
     async update(@Body() orderDto: Partial<OrderDto>): Promise<void> {
         await this.orderCoordinator.update(orderDto);
+    }
+
+    @Patch('payment/:operator/:id')
+    async updatePaymentStatus(
+        @Param('operator') operator: string,
+        @Param('id', ParseIntPipe) id: number
+    ): Promise<void> {
+        await this.orderCoordinator.updatePaymentStatus(operator, id);
     }
 
     @Patch('restore/:id')

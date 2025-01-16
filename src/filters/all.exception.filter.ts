@@ -25,8 +25,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
             responseTime: new Date()
         };
 
-        console.log(exception);
         // this.logger.debug(exception.stack);
+        console.log(exception);
 
         response.status(status).json(errorResponse);
     }
