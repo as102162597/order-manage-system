@@ -55,6 +55,11 @@ export class OrderCoordinator {
         return Math.floor(count / size) + Number(!!(count % size));
     }
 
+    async findPriceById(id: number): Promise<number> {
+        const orderDto = await this.findOneById(id);
+        return orderDto.getPrice();
+    }
+
     async update(orderDto: Partial<OrderDto>): Promise<void> {
         const original = await this.findOneById(orderDto.id);
         this.checkUpdateInputRecursively(orderDto, original);

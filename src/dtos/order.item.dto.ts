@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Countable } from 'src/interfaces/countable';
 
-export class OrderItemDto {
+export class OrderItemDto implements Countable {
     @IsNotEmpty()
     @IsNumber()
     id: number;
@@ -19,4 +20,8 @@ export class OrderItemDto {
 
     @IsString()
     shipmentId: number;
+
+    getPrice(): number {
+        return Number(this.price) || 0;
+    }
 };

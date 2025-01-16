@@ -49,6 +49,11 @@ export class OrderController {
         return this.orderCoordinator.findBySizeAndPage(size, page);
     }
 
+    @Get('price/:id')
+    async findPriceById(@Param('id') id: number): Promise<number> {
+        return this.orderCoordinator.findPriceById(id);
+    }
+
     @Get(':id')
     async findOneById(@Param('id') id: number): Promise<OrderDto> {
         return this.orderCoordinator.findOneById(id);
