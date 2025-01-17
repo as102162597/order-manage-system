@@ -64,6 +64,12 @@ export class OrderService {
         return this.orderRepository.count({ where: { deleted } });
     }
 
+    async findPageCount(size: number, deleted = false): Promise<number> {
+        this.checkFindBySizeAndPageInputs(size, 1);
+        const count = await this.findCount(deleted);
+        return Math.floor(count / size) + Number(!!(count % size));
+    }
+
     async update(queryRunner: QueryRunner, id: number, order: Order): Promise<UpdateResult> {
         order.id = id;
         const container = new FieldContainer(order, [ 'shipments' ]);

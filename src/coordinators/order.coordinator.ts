@@ -54,8 +54,7 @@ export class OrderCoordinator {
     }
 
     async findPageCount(size: number, deleted = false): Promise<number> {
-        const count = await this.orderService.findCount(deleted);
-        return Math.floor(count / size) + Number(!!(count % size));
+        return await this.orderService.findPageCount(size, deleted);
     }
 
     async findPriceById(id: number): Promise<number> {

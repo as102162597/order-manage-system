@@ -78,8 +78,7 @@ export class ShipmentCoordinator {
     }
 
     async findPageCount(size: number, deleted = false): Promise<number> {
-        const count = await this.shipmentService.findCount(deleted);
-        return Math.floor(count / size) + Number(!!(count % size));
+        return await this.shipmentService.findPageCount(size, deleted);
     }
 
     async update(shipmentDto: Partial<ShipmentDto>): Promise<void> {
