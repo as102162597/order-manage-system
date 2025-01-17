@@ -26,7 +26,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         };
 
         // this.logger.debug(exception.stack);
-        console.log(exception);
+        // console.log(exception);
 
         response.status(status).json(errorResponse);
     }

@@ -87,7 +87,7 @@ export class OrderCoordinator {
         const orderDao = await this.orderService.findOneById(id);
         const orderDto = this.getDto(orderDao);
         const handler = StatusFactory.createHandler(orderDao.paymentStatusId);
-        console.log(this.operatePayment(handler, operator));
+        this.operatePayment(handler, operator);
         orderDto.paymentStatus = getPaymentStatus('id', handler.getId())?.name;
         await this.updateWithTransaction(orderDto);
     }
@@ -179,13 +179,13 @@ export class OrderCoordinator {
         this.shipmentCoordinator.checkUpdateInputs(orderDto.shipments, original.shipments);
     }
 
-    private operatePayment(handler: StatusHandler, operator: string): number {
+    private operatePayment(handler: StatusHandler, operator: string): void {
         switch (operator) {
-            case 'success':     handler.paymentSucceeded(); return 1;
-            case 'failed':      handler.paymentFailed();    return 2;
-            case 'overdue':     handler.overdue();          return 3;
-            case 'refund':      handler.requestRefund();    return 4;
-            case 'refunded':    handler.completeRefund();   return 5;
+            case 'success':     handler.paymentSucceeded(); return;
+            case 'failed':      handler.paymentFailed();    return;
+            case 'overdue':     handler.overdue();          return;
+            case 'refund':      handler.requestRefund();    return;
+            case 'refunded':    handler.completeRefund();   return;
             default:
                 throw new HttpException(
                     `Cannot PATCH /order/payment/${operator}`, HttpStatus.NOT_FOUND);
