@@ -7,16 +7,17 @@ import { Order } from './entities/order.entity';
 import { Shipment } from './entities/shipment.entity';
 import { OrderItem } from './entities/order.items.entity';
 import { OrderModule } from './modules/order.module';
+import { configuration } from './configuration';
 
 @Module({
     imports: [
         TypeOrmModule.forRoot({
-            type: 'mysql',
-            host: 'localhost',
-            port: 3306,
-            username: 'root',
-            password: '0000',
-            database: 'order_manage_system',
+            type: configuration.dbms.dialect,
+            host: configuration.dbms.host,
+            port: configuration.dbms.port,
+            username: configuration.dbms.username,
+            password: configuration.dbms.password,
+            database: configuration.dbms.database,
             entities: [ PaymentStatus, Order, Shipment, OrderItem ],
             synchronize: true
         }),
